@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,19 +12,46 @@ import type { RootStackNavigationProp } from '@/navigation/types';
 import { useStore } from '@/store';
 import { CharacterCard } from './CharacterCard';
 import type { Character } from '@/api/types';
+import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
 
 export const CharacterList: React.FC = () => {
   const navigation = useNavigation<RootStackNavigationProp<'CharacterList'>>();
-  const { characters, loading, error, fetchCharacters } = useStore();
+  
+  // Split selectors to avoid unnecessary re-renders
+  const characters = useStore((state) => state.characters);
+  const loading = useStore((state) => state.loading);
+  const error = useStore((state) => state.error);
+  const fetchCharacters = useStore((state) => state.fetchCharacters);
 
   useEffect(() => {
     fetchCharacters();
-  }, [fetchCharacters]);
+  }, []); // Safe to use empty deps since fetchCharacters is stable in Zustand
+
+  // Memoize navigation handler
+  const handleCharacterPress = useCallback(
+    (characterId: number) => {
+      navigation.navigate('CharacterProfile', { characterId });
+    },
+    [navigation]
+  );
+
+  // Memoize renderItem to avoid recreating on every render
+  const renderItem = useCallback(
+    ({ item }: { item: Character }) => (
+      <View style={styles.cardWrapper}>
+        <CharacterCard
+          character={item}
+          onPress={() => handleCharacterPress(item.id)}
+        />
+      </View>
+    ),
+    [handleCharacterPress]
+  );
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={styles.loadingText}>Loading characters...</Text>
       </View>
     );
@@ -58,16 +85,10 @@ export const CharacterList: React.FC = () => {
       data={characters}
       numColumns={2}
       keyExtractor={(item: Character) => item.id.toString()}
-      renderItem={({ item }) => (
-        <View style={styles.cardWrapper}>
-          <CharacterCard
-            character={item}
-            onPress={() => navigation.navigate('CharacterProfile', { characterId: item.id })}
-          />
-        </View>
-      )}
+      renderItem={renderItem}
       contentContainerStyle={styles.listContent}
       showsVerticalScrollIndicator={true}
+      removeClippedSubviews={true}
     />
   );
 };
@@ -75,49 +96,49 @@ export const CharacterList: React.FC = () => {
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: Colors.background,
   },
   listContent: {
-    padding: 8,
+    padding: Spacing.sm,
     maxWidth: 972,
     width: '100%',
     alignSelf: 'center',
   },
   cardWrapper: {
     flex: 1,
-    margin: 8,
+    margin: Spacing.sm,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    padding: 16,
+    backgroundColor: Colors.background,
+    padding: Spacing.lg,
   },
   loadingText: {
-    marginTop: 16,
-    color: '#4b5563',
-    fontSize: 14,
+    marginTop: Spacing.lg,
+    color: Colors.textSecondary,
+    fontSize: FontSize.sm,
   },
   errorText: {
-    color: '#ef4444',
+    color: Colors.error,
     textAlign: 'center',
-    marginBottom: 16,
-    fontSize: 14,
+    marginBottom: Spacing.lg,
+    fontSize: FontSize.sm,
   },
   retryButton: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
   },
   retryButtonText: {
-    color: '#ffffff',
+    color: Colors.white,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: FontSize.sm,
   },
   emptyText: {
-    color: '#4b5563',
-    fontSize: 14,
+    color: Colors.textSecondary,
+    fontSize: FontSize.sm,
   },
 });

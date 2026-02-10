@@ -1,24 +1,25 @@
 import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import type { Character } from '@/api/types';
+import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
 
 interface CharacterCardProps {
   character: Character;
   onPress?: () => void;
 }
 
-export const CharacterCard: React.FC<CharacterCardProps> = ({
+const CharacterCardComponent: React.FC<CharacterCardProps> = ({
   character,
   onPress,
 }) => {
   const getStatusColor = (status: Character['status']) => {
     switch (status) {
       case 'Alive':
-        return '#10b981'; // green-500
+        return Colors.success;
       case 'Dead':
-        return '#ef4444'; // red-500
+        return Colors.error;
       default:
-        return '#6b7280'; // gray-500
+        return Colors.gray500;
     }
   };
 
@@ -65,11 +66,19 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
   );
 };
 
+// Wrap in React.memo for performance optimization
+export const CharacterCard = React.memo(
+  CharacterCardComponent,
+  (prevProps, nextProps) =>
+    prevProps.character.id === nextProps.character.id &&
+    prevProps.onPress === nextProps.onPress
+);
+
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -82,36 +91,36 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 300,
     aspectRatio: 1,
-    backgroundColor: '#e5e7eb',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    backgroundColor: Colors.border,
+    borderTopLeftRadius: BorderRadius.md,
+    borderTopRightRadius: BorderRadius.md,
   },
   statusDot: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: Spacing.md,
+    right: Spacing.md,
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: BorderRadius.full,
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: Colors.white,
   },
   content: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   name: {
-    fontSize: 18,
+    fontSize: FontSize.lg,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
   },
   species: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginBottom: 8,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
   },
   location: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
   },
 });

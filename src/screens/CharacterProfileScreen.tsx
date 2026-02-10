@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import type { RootStackNavigationProp, RootStackRouteProp } from '@/navigation/types';
 import { getCharacter, getEpisodesByIds } from '@/api/rickMorty';
 import type { Character, Episode } from '@/api/types';
+import { Colors, Spacing, FontSize, BorderRadius } from '@/constants/theme';
 
 interface CharacterProfileScreenProps {
   navigation: RootStackNavigationProp<'CharacterProfile'>;
@@ -45,22 +46,22 @@ const StatusBadge: React.FC<{ status: Character['status'] }> = ({ status }) => {
   const getBadgeStyle = () => {
     switch (status) {
       case 'Alive':
-        return { backgroundColor: '#d1fae5', borderColor: '#a7f3d0' };
+        return { backgroundColor: Colors.successLight, borderColor: Colors.successBorder };
       case 'Dead':
-        return { backgroundColor: '#fee2e2', borderColor: '#fecaca' };
+        return { backgroundColor: Colors.errorLight, borderColor: Colors.errorBorder };
       default:
-        return { backgroundColor: '#f3f4f6', borderColor: '#e5e7eb' };
+        return { backgroundColor: Colors.gray100, borderColor: Colors.border };
     }
   };
 
   const getTextColor = () => {
     switch (status) {
       case 'Alive':
-        return '#065f46';
+        return Colors.successText;
       case 'Dead':
-        return '#991b1b';
+        return Colors.errorText;
       default:
-        return '#1f2937';
+        return Colors.gray900;
     }
   };
 
@@ -95,8 +96,8 @@ export const CharacterProfileScreen: React.FC<CharacterProfileScreenProps> = ({
       .slice(0, 10); // Limit to first 10 (Task 5.5)
   };
 
-  // Retry mechanism (Task 2.7)
-  const fetchCharacterData = async () => {
+  // Retry mechanism (Task 2.7) - Wrapped in useCallback to fix hooks dependencies
+  const fetchCharacterData = useCallback(async () => {
     try {
       setLoadingState('loading');
       setError('');
@@ -114,27 +115,28 @@ export const CharacterProfileScreen: React.FC<CharacterProfileScreenProps> = ({
         setEpisodes(episodesData);
         setEpisodesLoading(false);
       }
-    } catch (err: any) {
+    } catch (err) {
       // Error handling (Task 2.6)
-      if (err.response?.status === 404) {
+      const error = err as { response?: { status?: number }; message?: string };
+      if (error.response?.status === 404) {
         setLoadingState('not-found');
         setError('Character not found');
       } else {
         setLoadingState('error');
-        setError(err.message || 'Failed to load character data');
+        setError(error.message || 'Failed to load character data');
       }
     }
-  };
+  }, [characterId]);
 
   useEffect(() => {
     fetchCharacterData();
-  }, [characterId]);
+  }, [fetchCharacterData]);
 
   // Loading state UI (Task 6.1, 6.4)
   if (loadingState === 'loading') {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={Colors.primary} />
         <Text style={styles.loadingText}>Loading character...</Text>
       </View>
     );
@@ -253,42 +255,42 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
   },
   loadingText: {
-    color: '#4b5563',
-    marginTop: 16,
-    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: Spacing.lg,
+    fontSize: FontSize.sm,
   },
   errorTitle: {
-    fontSize: 24,
+    fontSize: FontSize.xxl,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
     textAlign: 'center',
   },
   errorMessage: {
-    color: '#4b5563',
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 24,
-    fontSize: 14,
+    marginBottom: Spacing.xl,
+    fontSize: FontSize.sm,
   },
   button: {
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
   },
   buttonText: {
-    color: '#ffffff',
+    color: Colors.white,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: FontSize.sm,
   },
   header: {
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.card,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -299,52 +301,52 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 300,
     height: 320,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: Colors.border,
   },
   headerContent: {
-    padding: 24,
+    padding: Spacing.xl,
   },
   characterName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 12,
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 9999,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
   statusText: {
-    fontSize: 14,
+    fontSize: FontSize.sm,
     fontWeight: '600',
   },
   section: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: FontSize.xl,
     fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 16,
+    color: Colors.text,
+    marginBottom: Spacing.lg,
   },
   cardsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -4,
+    marginHorizontal: -Spacing.xs,
   },
   cardColumn: {
     width: '50%',
   },
   infoCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    margin: 4,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    margin: Spacing.xs,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: Colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -352,23 +354,23 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: FontSize.sm,
+    color: Colors.gray500,
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   infoValue: {
-    fontSize: 16,
-    color: '#111827',
+    fontSize: FontSize.base,
+    color: Colors.text,
     fontWeight: '600',
   },
   episodeItem: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: Colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -376,27 +378,27 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   episodeName: {
-    fontSize: 16,
+    fontSize: FontSize.base,
     fontWeight: '600',
-    color: '#111827',
+    color: Colors.text,
   },
   episodeNumber: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginTop: 4,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   episodeAirDate: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
+    fontSize: FontSize.sm,
+    color: Colors.gray500,
+    marginTop: Spacing.xs,
   },
   episodesLoading: {
-    paddingVertical: 32,
+    paddingVertical: Spacing.xxl,
   },
   emptyText: {
-    color: '#6b7280',
+    color: Colors.gray500,
     textAlign: 'center',
-    paddingVertical: 32,
-    fontSize: 14,
+    paddingVertical: Spacing.xxl,
+    fontSize: FontSize.sm,
   },
 });
