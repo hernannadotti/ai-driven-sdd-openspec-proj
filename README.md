@@ -1,0 +1,1 @@
+# ai-driven-sdd-openspec-proj
