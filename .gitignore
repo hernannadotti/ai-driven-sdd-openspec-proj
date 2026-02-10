@@ -43,6 +43,7 @@ DerivedData/
 .idea/
 
 # Android
+/android
 /android/.gradle
 /android/app/build/
 /android/build/
